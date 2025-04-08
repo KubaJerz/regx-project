@@ -1,6 +1,7 @@
 import sys
 from tree import Tree
 import argparse
+from routines import check_empty, check_has_epsilon
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -42,9 +43,9 @@ def main():
             elif args.simplify:
                 pass
             elif args.empty:
-                pass
+                print('yes' if check_empty(postfix_tree) else 'no')
             elif args.has_epsilon:
-                pass
+                print('yes' if check_has_epsilon(postfix_tree) else 'no')
             elif args.has_nonepsilon:
                 pass
             elif args.uses:
