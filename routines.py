@@ -182,4 +182,4 @@ def create_strip(S, a):
         else:
             return Node('.', create_strip(S.left, a), S.right)
     elif S.data == "*":
-        
+        return Node('.', create_strip(S.left, a), Node('*', Node(S.left)))
