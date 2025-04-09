@@ -8,10 +8,14 @@ class Node:
         self.right = right
 
     def __str__(self):
-        """prints out the tree the node in prefix notation"""
-        if self.data is None: 
+        """prints out the tree in prefix notation"""
+        if self.data is None:
             return ''
-        else:
+        elif self.left is None and self.right is None:
+            return self.data
+        elif self.right is None:  #  unary ops
+            return f"{self.data}{str(self.left)}"
+        else:  #  binary ops 
             return f"{self.data}{str(self.left)}{str(self.right)}"
 
 
@@ -19,7 +23,7 @@ class Tree:
     def __init__(self):
         self.head = None
         digits = {str(i) for i in range(10)}
-        self.alphabet = digits.union({chr(i) for i in range(ord('a'), ord('z')+1)})
+        self.alphabet = (digits.union({chr(i) for i in range(ord('a'), ord('z')+1)})).union('/')
         self.unary = set(["*"])
         self.binary = set(["+", "."])
 
@@ -36,8 +40,8 @@ class Tree:
                 stack.append(Node(token,left=left))
 
             elif self.__isBinary__(token):
-                left = stack.pop()
                 right = stack.pop()
+                left = stack.pop()
                 stack.append(Node(token,left=left, right=right))
 
             else:

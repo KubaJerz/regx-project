@@ -36,9 +36,9 @@ def check_has_nonepsilon(S):
     elif S.data == '+':
         return check_has_nonepsilon(S.left) or check_has_nonepsilon(S.right)
     elif S.data == '.':
-        return (check_has_nonepsilon(S.left) or check_has_nonepsilon(S.right)) and (not check_empty(S.left) and not check_empty(S.right))
+        return (check_has_nonepsilon(S.left) and not check_empty(S.right)) or (check_has_nonepsilon(S.right) and not check_empty(S.left))
     elif S.data == '*':
-        return not check_empty(S)
+        return check_has_nonepsilon(S.left)
     
 def check_uses_a(S, a):
     if S.data == EMPTY_SET:
@@ -122,7 +122,7 @@ def create_prefixes(S):
         empty_str = Node('*', left=Node(EMPTY_SET), right=None) #to make /*
         return Node('+', S, empty_str)
     elif S.data == "+":
-        return(S.data, create_prefixes(S.left), create_prefixes(S.right))
+        return Node(S.data, create_prefixes(S.left), create_prefixes(S.right))
     elif S.data == ".":
         if check_empty(S.right):
             return Node(EMPTY_SET)
@@ -155,16 +155,32 @@ def create_insert(S, a):
     if S.data == EMPTY_SET:
         return S
     elif S.data in ALPHABET:
-        left = Node(f'{a}{S.data}')
-        right = Node(f'{S.data}{a}')
+        left = Node('.', Node(a), S.data)
+        right = Node('.', S.data, Node(a))
         return Node('+', left, right)
     elif S.data == '+':
         return Node(S.data, create_insert(S.left, a), create_insert(S.right, a))
     elif S.data == '.':
-        left = Node('.', Node('*', Node(S.left)), Node(a))
-        right = Node('*', Node(S.left))
-        return Node('.', left, right)
+        left_insert = Node('.', create_insert(S.left, a), S.right)
+        right_insert = Node('.', S.left, create_insert(S.right, a))
+        return Node('+', left_insert, right_insert)
+    elif S.data == '*':
+        pre = Node(a)
         
+        double_star = Node('*', Node('*', S.left))  # a** for both sides
+        
+        if a == EMPTY_SET or S.left.data == EMPTY_SET: #if one is then the concat will be jsut the empty set
+            innner = Node(EMPTY_SET)
+        else:
+            before_symbol = Node('.', Node(a), S.left)  # ba
+            after_symbol = Node('.', S.left, Node(a))   # ab
+            innner = Node('+', before_symbol, after_symbol)  # (ba+ab)
+        
+        combined = Node('.', Node('.', double_star, innner), double_star)
+        
+        return Node('+', pre, combined) 
+
+
 def create_strip(S, a):
     if S.data == EMPTY_SET:
         return S
@@ -182,4 +198,57 @@ def create_strip(S, a):
         else:
             return Node('.', create_strip(S.left, a), S.right)
     elif S.data == "*":
-        return Node('.', create_strip(S.left, a), Node('*', Node(S.left)))
+        return Node('.', create_strip(S.left, a), Node('*', S.left))
+
+def simplify_until_fixed_point(S):
+    """do the  simplify until does not change any more"""
+    current = S
+    while True:
+        simplified = create_simplify(current)
+        if str(simplified) == str(current):
+            return simplified
+        current = simplified
+    
+def create_simplify(S):
+    if S is None:
+        return None
+        
+    # recurse over the children
+    if S.data in ['+', '.']:
+        S.left = create_simplify(S.left)
+        S.right = create_simplify(S.right)
+    elif S.data == '*':
+        S.left = create_simplify(S.left)
+    
+  
+    # rule 1 s** -> s*
+    if S.data == '*' and S.left and S.left.data == '*':
+        return S.left
+        
+    #rules 2
+    if S.data == '+':
+        if S.left.data == EMPTY_SET:
+            return S.right
+        if S.right.data == EMPTY_SET:
+            return S.left
+            
+    #rule 3
+    if S.data == '.':
+        if S.left.data == EMPTY_SET or S.right.data == EMPTY_SET:
+            return Node(EMPTY_SET)
+            
+    #rule 4
+    if S.data == '.':
+        if S.left.data == '*' and S.left.left.data == EMPTY_SET:
+            return S.right
+        if S.right.data == '*' and S.right.left.data == EMPTY_SET:
+            return S.left
+            
+    #rule 5
+    if S.data == '*' and S.left.data == '+':
+        if (S.left.left.data == '*' and S.left.left.left.data == EMPTY_SET):
+            return Node('*', S.left.right)
+        if (S.left.right.data == '*' and S.left.right.left.data == EMPTY_SET):
+            return Node('*', S.left.left)
+            
+    return S

@@ -1,7 +1,7 @@
 import sys
 from tree import Tree
 import argparse
-from routines import check_empty, check_has_epsilon, check_has_nonepsilon, check_uses_a, create_not_using, check_is_infinite, check_starts_with, check_ends_with, create_reverse, create_prefixes, create_bs_for_a, create_insert, create_strip
+from routines import check_empty, check_has_epsilon, check_has_nonepsilon, check_uses_a, create_not_using, check_is_infinite, check_starts_with, check_ends_with, create_reverse, create_prefixes, create_bs_for_a, create_insert, create_strip, create_simplify, simplify_until_fixed_point
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -38,7 +38,7 @@ def main():
             if args.no_op:
                 print(postfix_tree)
             elif args.simplify:
-                print(postfix_tree)
+                print(simplify_until_fixed_point(postfix_tree))
             elif args.empty:
                 print('yes' if check_empty(postfix_tree) else 'no')
             elif args.has_epsilon:
@@ -48,7 +48,7 @@ def main():
             elif args.uses:
                 print('yes' if check_uses_a(postfix_tree, args.uses) else 'no')
             elif args.not_using:
-               print(create_not_using(postfix_tree))
+               print(create_not_using(postfix_tree, args.not_using))
             elif args.infinite:
                 print('yes' if check_is_infinite(postfix_tree) else 'no')
             elif args.starts_with:
@@ -62,9 +62,9 @@ def main():
             elif args.bs_for_a:
                 print(create_bs_for_a(postfix_tree))
             elif args.insert:
-                print(create_insert(postfix_tree))
+                print(create_insert(postfix_tree, args.insert))
             elif args.strip:
-                print(create_strip(postfix_tree))
+                print(create_strip(postfix_tree, args.strip))
         except ValueError as e:
             sys.stderr.write(f"Error: {e}")
 
